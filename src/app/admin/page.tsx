@@ -9,10 +9,10 @@ export default function AdminDashboardPage() {
     { title: "Coupons", href: "/admin/coupons", icon: Tag, description: "Create and manage discount codes." },
     { title: "Orders", href: "/admin/orders", icon: FileText, description: "View and process customer orders." },
     { title: "Return Requests", href: "/admin/returns", icon: Undo2, description: "Manage product return requests." },
+    { title: "Users", href: "/admin/users", icon: Users, description: "View user details and manage accounts." },
     { title: "Feedback", href: "/admin/feedback", icon: MessageSquare, description: "Review user feedback." },
     { title: "Product Requests", href: "/admin/requests", icon: Lightbulb, description: "Manage user product requests." },
     { title: "Gift Claims", href: "/admin/claims", icon: Gift, description: "View and manage gift claims." },
-    // { title: "Users", href: "/admin/users", icon: Users, description: "Manage user accounts." },
   ];
 
   return (

@@ -50,7 +50,7 @@ export interface DigitalProductSpecifics {
 // This union type ensures that if productType is 'physical', only PhysicalProductSpecifics are applicable, etc.
 export type Product = BaseProduct & (
   | ({ productType: 'physical' } & PhysicalProductSpecifics)
-  | ({ productType: 'customized' } & CustomizedProductSpecifics) // Now includes PhysicalProductSpecifics implicitly
+  | ({ productType: 'customized' } & CustomizedProductSpecifics)
   | ({ productType: 'digital' } & DigitalProductSpecifics)
 );
 
@@ -130,12 +130,14 @@ export interface AuthFormData {
   email: string;
   password: string;
   displayName?: string;
+  phone?: string; // Added phone number
 }
 
 export interface UserDocument {
   uid: string;
   email: string;
   displayName: string | null;
+  phone?: string; // Added phone number
   createdAt: Timestamp;
   hasClaimedFiveProductGift?: boolean;
 }
@@ -178,8 +180,8 @@ export type OrderStatus =
   | 'Shipped'
   | 'Delivered'
   | 'Cancelled'
-  | 'Return Requested' // This status can be on the Order if the whole order is marked for return
-  | 'Returned' // This status can be on the Order if the whole order is returned
+  | 'Return Requested'
+  | 'Returned'
   | 'Paid'
   | 'Payment Failed'
   | 'Pending Payment'
@@ -210,14 +212,13 @@ export interface ReturnRequestData {
   reason: string;
 }
 
-// Updated ReturnRequestStatus to include more granular states
-export type ReturnRequestStatus = 
-  | 'Pending' 
-  | 'Approved' 
-  | 'Rejected' 
-  | 'Processing' // e.g., item received, refund being processed
-  | 'Completed' // e.g., refund issued
-  | 'Cancelled'; // If user cancels the return request or admin cancels it
+export type ReturnRequestStatus =
+  | 'Pending'
+  | 'Approved'
+  | 'Rejected'
+  | 'Processing'
+  | 'Completed'
+  | 'Cancelled';
 
 export interface ReturnRequest {
   id: string;
@@ -225,16 +226,15 @@ export interface ReturnRequest {
   productId: string;
   productName: string;
   quantityReturned: number;
-  userId: string; // The UID of the user who requested the return
-  userEmail?: string; // Email of the user, denormalized for easier display in admin
+  userId: string;
+  userEmail?: string;
   upiId: string;
   reason: string;
   requestedAt: Timestamp;
   status: ReturnRequestStatus;
-  orderCreatedAt: Timestamp; // Useful for checking eligibility or context
+  orderCreatedAt: Timestamp;
 }
 
-// For Product Request Feature
 export interface ProductRequestFormData {
   productName: string;
   description: string;
@@ -253,7 +253,6 @@ export interface ProductRequest extends ProductRequestFormData {
   status: ProductRequestStatus;
 }
 
-// For Feedback Feature
 export interface FeedbackFormData {
   message: string;
 }
@@ -267,7 +266,6 @@ export interface FeedbackEntry {
   submittedAt: Timestamp;
 }
 
-// For Surprise Gift Feature
 export interface GiftClaimFormData {
   name: string;
   phone: string;

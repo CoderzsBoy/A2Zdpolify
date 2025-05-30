@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return unsubscribe;
   }, []);
 
-  const signUp = async ({ email, password, displayName }: AuthFormData): Promise<User | null> => {
+  const signUp = async ({ email, password, displayName, phone }: AuthFormData): Promise<User | null> => {
     setLoading(true);
     setError(null);
     if (!displayName) {
@@ -55,8 +55,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         uid: userCredential.user.uid,
         email: userCredential.user.email || email,
         displayName: displayName,
+        phone: phone || undefined, // Store phone if provided
         createdAt: serverTimestamp() as Timestamp,
-        hasClaimedFiveProductGift: false, // Initialize gift claim status
+        hasClaimedFiveProductGift: false,
       };
       await setDoc(userDocRef, userDocument);
 
@@ -99,7 +100,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const userCredential = await signInWithEmailAndPassword(auth, actualEmail, password);
       setLoading(false);
       return userCredential.user;
-    } catch (err: any) { // Added missing opening brace here
+    } catch (err: any) {
       setError("Invalid email/display name or password.");
       setLoading(false);
       return null;

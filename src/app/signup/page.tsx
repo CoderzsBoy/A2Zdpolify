@@ -17,6 +17,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [phone, setPhone] = useState(''); // Added phone state
   const { signUp, error, loading } = useAuth();
   const [formError, setFormError] = useState<string | null>(null);
   const router = useRouter();
@@ -40,7 +41,11 @@ export default function SignupPage() {
       setFormError("Passwords do not match.");
       return;
     }
-    const user = await signUp({ email, password, displayName: displayName.trim() });
+    if (phone.trim() && !/^\+?[0-9\s-()]{10,20}$/.test(phone.trim())) {
+      setFormError("Invalid phone number format.");
+      return;
+    }
+    const user = await signUp({ email, password, displayName: displayName.trim(), phone: phone.trim() || undefined });
     if (user) {
       router.push('/');
     }
@@ -84,6 +89,18 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={loading}
+                className="text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number (Optional)</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="+91 12345 67890"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 disabled={loading}
                 className="text-sm"
               />

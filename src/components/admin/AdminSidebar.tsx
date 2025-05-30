@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import Image from 'next/image'; // Import next/image
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -29,7 +29,7 @@ const navItems = [
   { href: '/admin/feedback', label: 'Feedback', icon: MessageSquare },
   { href: '/admin/requests', label: 'Product Requests', icon: Lightbulb },
   { href: '/admin/claims', label: 'Gift Claims', icon: Gift },
-  // { href: '/admin/users', label: 'Users', icon: Users },
+  { href: '/admin/users', label: 'Users', icon: Users },
   // { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -52,7 +52,7 @@ export default function AdminSidebar() {
            <Image
             src={LOGO_URL}
             alt={LOGO_ALT}
-            width={64} // 4:3 aspect ratio for 48px height
+            width={64} 
             height={48} 
             className="h-12 object-contain" 
           />

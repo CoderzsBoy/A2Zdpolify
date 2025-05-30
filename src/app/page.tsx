@@ -10,6 +10,8 @@ import { collection, getDocs, query, orderBy, limit as firestoreLimit } from 'fi
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { Truck, WalletCards } from 'lucide-react'; // Added icons
+import { Separator } from '@/components/ui/separator'; // Added Separator
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -39,6 +41,23 @@ export default function HomePage() {
 
   return (
     <div className="container">
+      {/* USP Banner Section */}
+      <section className="my-6 md:my-8 bg-gradient-to-r from-primary/80 via-primary/90 to-accent/80 text-primary-foreground p-4 sm:p-5 rounded-lg shadow-lg">
+        <div className="flex flex-col sm:flex-row justify-around items-center gap-3 sm:gap-6 text-center">
+          <div className="flex items-center gap-2 group cursor-default">
+            <Truck className="h-6 w-6 sm:h-7 sm:w-7 transform transition-transform duration-300 group-hover:scale-110" />
+            <span className="font-semibold text-sm sm:text-base">Free Shipping on All Orders!</span>
+          </div>
+          <Separator orientation="vertical" className="hidden sm:block h-8 bg-primary-foreground/30" />
+          <div className="block sm:hidden w-2/3 h-px bg-primary-foreground/20 my-1"></div> {/* Mobile separator */}
+          <div className="flex items-center gap-2 group cursor-default">
+            <WalletCards className="h-6 w-6 sm:h-7 sm:w-7 transform transition-transform duration-300 group-hover:scale-110" />
+            <span className="font-semibold text-sm sm:text-base">Cash on Delivery Available!</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Hero Section */}
       <section className="py-10 md:py-16 text-center bg-muted rounded-lg shadow-md mb-10 md:mb-12">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-foreground">Welcome to AtoZdpolify</h1>
         <p className="text-md sm:text-lg md:text-xl text-muted-foreground mb-8 max-w-xl md:max-w-2xl mx-auto px-2">
