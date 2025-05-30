@@ -32,10 +32,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Loader2, PlusCircle, Edit2, Trash2, ImagePlus, X } from 'lucide-react';
+import { Loader2, PlusCircle, Edit2, Trash2, ImagePlus, X, UploadCloud } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { Card } from '@/components/ui/card'; // Added Card import
+import { Card } from '@/components/ui/card';
 
 const productSpecificsSchema = z.object({
   availableColors: z.array(z.string()).optional(),
@@ -80,12 +80,18 @@ const productFormSchema = z.object({
 
 type ProductFormData = z.infer<typeof productFormSchema>;
 
+const CLOUDINARY_CLOUD_NAME = "dlgpwihpq";
+const CLOUDINARY_UPLOAD_PRESET = "my_admin_uploads"; // Updated preset name
+
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const { toast } = useToast();
+  const [fileUploadMessages, setFileUploadMessages] = useState<Record<number, string | null>>({});
+  const [isUploading, setIsUploading] = useState<Record<number, boolean>>({});
+
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
@@ -146,9 +152,10 @@ export default function AdminProductsPage() {
   }, [toast]);
 
   const handleDialogOpen = (product?: Product) => {
+    setFileUploadMessages({});
+    setIsUploading({});
     if (product) {
       setEditingProduct(product);
-      // Ensure keywords, colors, sizes are arrays for the form
       const keywords = Array.isArray(product.keywords) ? product.keywords : (product.keywords ? [String(product.keywords)] : []);
       const availableColors = Array.isArray((product as PhysicalProductSpecifics).availableColors) ? (product as PhysicalProductSpecifics).availableColors : [];
       const availableSizes = Array.isArray((product as PhysicalProductSpecifics).availableSizes) ? (product as PhysicalProductSpecifics).availableSizes : [];
@@ -159,7 +166,6 @@ export default function AdminProductsPage() {
         availableColors,
         availableSizes,
         images: product.images?.length > 0 ? product.images : [{ url: '', altText: '', color: '', isPrimary: true }],
-        // Ensure type-specific fields are correctly populated or defaulted
         ...(product.productType === 'customized' ? (product as CustomizedProductSpecifics) : {}),
         ...(product.productType === 'digital' ? (product as DigitalProductSpecifics) : {}),
       });
@@ -180,9 +186,66 @@ export default function AdminProductsPage() {
     setIsDialogOpen(true);
   };
 
+  const handleImageFileSelected = async (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setFileUploadMessages(prev => ({ ...prev, [index]: null }));
+      return;
+    }
+
+    if (CLOUDINARY_UPLOAD_PRESET === "YOUR_UNSIGNED_CLOUDINARY_UPLOAD_PRESET") { // This check will now be false
+      toast({
+        title: "Configuration Needed",
+        description: "Please replace 'YOUR_UNSIGNED_CLOUDINARY_UPLOAD_PRESET' in the code with your actual Cloudinary upload preset name.",
+        variant: "destructive",
+        duration: 7000,
+      });
+      setFileUploadMessages(prev => ({ ...prev, [index]: "Cloudinary preset not configured." }));
+      return;
+    }
+
+    setIsUploading(prev => ({ ...prev, [index]: true }));
+    setFileUploadMessages(prev => ({ ...prev, [index]: `Uploading ${file.name}...` }));
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+
+    try {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || `Cloudinary upload failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+      const secureUrl = data.secure_url;
+
+      form.setValue(`images.${index}.url`, secureUrl);
+      form.setValue(`images.${index}.altText`, file.name); 
+      setFileUploadMessages(prev => ({ ...prev, [index]: `Upload successful! ${file.name}` }));
+      toast({ title: "Image Uploaded", description: `${file.name} uploaded to Cloudinary.` });
+
+    } catch (error: any) {
+      console.error("Cloudinary upload error:", error);
+      toast({ title: "Upload Failed", description: error.message || "Could not upload image to Cloudinary.", variant: "destructive" });
+      setFileUploadMessages(prev => ({ ...prev, [index]: "Upload failed. Please try again or enter URL manually." }));
+      form.setValue(`images.${index}.url`, ''); 
+    } finally {
+      setIsUploading(prev => ({ ...prev, [index]: false }));
+      if (event.target) {
+        event.target.value = '';
+      }
+    }
+  };
+
+
   const onSubmit = async (data: ProductFormData) => {
     try {
-      // Ensure at least one image is primary
       const hasPrimaryImage = data.images.some(img => img.isPrimary);
       if (!hasPrimaryImage && data.images.length > 0) {
         data.images[0].isPrimary = true;
@@ -190,7 +253,6 @@ export default function AdminProductsPage() {
 
       let productData: any = { ...data };
       
-      // Clean up specifics based on product type
       if (data.productType !== 'physical' && data.productType !== 'customized') {
         delete productData.availableColors;
         delete productData.availableSizes;
@@ -202,15 +264,25 @@ export default function AdminProductsPage() {
         delete productData.textCustomizationLabel;
         delete productData.textCustomizationMaxLength;
         delete productData.defaultImageX;
-        // ... and other customization specific fields
+        delete productData.defaultImageY;
+        delete productData.defaultImageScale;
+        delete productData.defaultTextX;
+        delete productData.defaultTextY;
+        delete productData.defaultTextSize;
       }
       if (data.productType !== 'digital') {
         delete productData.fileFormat;
         delete productData.downloadUrl;
       }
-      // Ensure numeric fields are numbers
       productData.price = Number(data.price);
       if (data.textCustomizationMaxLength) productData.textCustomizationMaxLength = Number(data.textCustomizationMaxLength);
+      if (data.defaultImageX) productData.defaultImageX = Number(data.defaultImageX);
+      if (data.defaultImageY) productData.defaultImageY = Number(data.defaultImageY);
+      if (data.defaultImageScale) productData.defaultImageScale = Number(data.defaultImageScale);
+      if (data.defaultTextX) productData.defaultTextX = Number(data.defaultTextX);
+      if (data.defaultTextY) productData.defaultTextY = Number(data.defaultTextY);
+      if (data.defaultTextSize) productData.defaultTextSize = Number(data.defaultTextSize);
+
 
 
       if (editingProduct) {
@@ -299,20 +371,39 @@ export default function AdminProductsPage() {
               {imageFields.map((field, index) => (
                 <div key={field.id} className="space-y-2 p-3 border rounded bg-muted/50">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div><Label htmlFor={`images.${index}.url`}>Image URL</Label><Input id={`images.${index}.url`} {...form.register(`images.${index}.url`)} />{form.formState.errors.images?.[index]?.url && <p className="text-xs text-destructive mt-1">{form.formState.errors.images?.[index]?.url?.message}</p>}</div>
-                    <div><Label htmlFor={`images.${index}.altText`}>Alt Text (Optional)</Label><Input id={`images.${index}.altText`} {...form.register(`images.${index}.altText`)} /></div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
-                    <div><Label htmlFor={`images.${index}.color`}>Linked Color (Optional)</Label><Input id={`images.${index}.color`} placeholder="e.g., Black" {...form.register(`images.${index}.color`)} /></div>
-                    <div className="flex items-center gap-2 pt-5">
-                      <Controller name={`images.${index}.isPrimary`} control={form.control} render={({ field }) => (<Checkbox id={`images.${index}.isPrimary`} checked={field.value} onCheckedChange={field.onChange} />)} />
-                      <Label htmlFor={`images.${index}.isPrimary`} className="text-sm font-normal">Is Primary Image?</Label>
+                    <div>
+                        <Label htmlFor={`images.${index}.url`}>Image URL</Label>
+                        <Input id={`images.${index}.url`} {...form.register(`images.${index}.url`)} placeholder="Enter URL or upload below" />
+                        {form.formState.errors.images?.[index]?.url && <p className="text-xs text-destructive mt-1">{form.formState.errors.images?.[index]?.url?.message}</p>}
+                    </div>
+                    <div>
+                        <Label htmlFor={`images.${index}.file`}>Upload Image File</Label>
+                        <div className="flex items-center gap-2">
+                            <Input 
+                                id={`images.${index}.file`} 
+                                type="file" 
+                                accept="image/*" 
+                                className="text-sm file:mr-2 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 flex-grow"
+                                onChange={(e) => handleImageFileSelected(e, index)}
+                                disabled={isUploading[index]}
+                            />
+                            {isUploading[index] && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+                        </div>
+                         {fileUploadMessages[index] && <p className="text-xs text-muted-foreground mt-1">{fileUploadMessages[index]}</p>}
                     </div>
                   </div>
-                  <Button type="button" variant="destructive" size="sm" onClick={() => removeImage(index)} className="mt-1"><Trash2 className="mr-1 h-3 w-3"/> Remove Image</Button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div><Label htmlFor={`images.${index}.altText`}>Alt Text (Optional)</Label><Input id={`images.${index}.altText`} {...form.register(`images.${index}.altText`)} /></div>
+                     <div><Label htmlFor={`images.${index}.color`}>Linked Color (Optional)</Label><Input id={`images.${index}.color`} placeholder="e.g., Black" {...form.register(`images.${index}.color`)} /></div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-2">
+                      <Controller name={`images.${index}.isPrimary`} control={form.control} render={({ field }) => (<Checkbox id={`images.${index}.isPrimary`} checked={field.value} onCheckedChange={field.onChange} />)} />
+                      <Label htmlFor={`images.${index}.isPrimary`} className="text-sm font-normal">Is Primary Image?</Label>
+                  </div>
+                  <Button type="button" variant="destructive" size="sm" onClick={() => removeImage(index)} className="mt-1"><Trash2 className="mr-1 h-3 w-3"/> Remove Image Entry</Button>
                 </div>
               ))}
-              <Button type="button" variant="outline" size="sm" onClick={() => appendImage({ url: '', altText: '', color: '', isPrimary: imageFields.length === 0 })}><ImagePlus className="mr-2 h-4 w-4"/>Add Image</Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => {appendImage({ url: '', altText: '', color: '', isPrimary: imageFields.length === 0 }); setFileUploadMessages(prev => ({...prev, [imageFields.length]: null})); setIsUploading(prev => ({...prev, [imageFields.length]: false})); }}><ImagePlus className="mr-2 h-4 w-4"/>Add Image Entry</Button>
                {form.formState.errors.images && typeof form.formState.errors.images === 'object' && !Array.isArray(form.formState.errors.images) && <p className="text-xs text-destructive mt-1">{form.formState.errors.images.message}</p>}
             </div>
 
@@ -321,7 +412,7 @@ export default function AdminProductsPage() {
                 <Label className="text-md font-medium">Keywords (Optional)</Label>
                 {keywordFields.map((field, index) => (
                     <div key={field.id} className="flex items-center gap-2">
-                    <Input {...form.register(`keywords.${index}`)} placeholder="e.g., t-shirt" />
+                    <Input {...form.register(`keywords.${index}` as any)} placeholder="e.g., t-shirt" />
                     <Button type="button" variant="ghost" size="icon" onClick={() => removeKeyword(index)} className="text-destructive"><X className="h-4 w-4" /></Button>
                     </div>
                 ))}
@@ -334,23 +425,21 @@ export default function AdminProductsPage() {
             {(productType === 'physical' || productType === 'customized') && (
               <div className="space-y-4 p-4 border rounded-md bg-secondary/20">
                 <h3 className="text-md font-semibold">Physical/Customization Options</h3>
-                {/* Available Colors */}
                 <div className="space-y-2">
                     <Label>Available Colors (Optional)</Label>
                     {colorFields.map((field, index) => (
                         <div key={field.id} className="flex items-center gap-2">
-                        <Input {...form.register(`availableColors.${index}`)} placeholder="e.g., Midnight Black" />
+                        <Input {...form.register(`availableColors.${index}` as any)} placeholder="e.g., Midnight Black" />
                         <Button type="button" variant="ghost" size="icon" onClick={() => removeColor(index)} className="text-destructive"><X className="h-4 w-4" /></Button>
                         </div>
                     ))}
                     <Button type="button" variant="outline" size="sm" onClick={() => appendColor('')}>Add Color</Button>
                 </div>
-                {/* Available Sizes */}
                 <div className="space-y-2">
                     <Label>Available Sizes (Optional)</Label>
                     {sizeFields.map((field, index) => (
                         <div key={field.id} className="flex items-center gap-2">
-                        <Input {...form.register(`availableSizes.${index}`)} placeholder="e.g., Large" />
+                        <Input {...form.register(`availableSizes.${index}` as any)} placeholder="e.g., Large" />
                         <Button type="button" variant="ghost" size="icon" onClick={() => removeSize(index)} className="text-destructive"><X className="h-4 w-4" /></Button>
                         </div>
                     ))}
@@ -368,7 +457,6 @@ export default function AdminProductsPage() {
                 <div className="flex items-center gap-2"><Controller name="allowTextCustomization" control={form.control} render={({ field }) => (<Checkbox id="allowTextCustomization" checked={field.value} onCheckedChange={field.onChange} />)} /><Label htmlFor="allowTextCustomization" className="font-normal">Allow Text Customization</Label></div>
                 <div><Label htmlFor="textCustomizationLabel">Text Customization Label</Label><Input id="textCustomizationLabel" {...form.register('textCustomizationLabel')} /></div>
                 <div><Label htmlFor="textCustomizationMaxLength">Text Max Length</Label><Input id="textCustomizationMaxLength" type="number" {...form.register('textCustomizationMaxLength')} /></div>
-                {/* Default Position/Scale - simplified inputs */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
                     <div><Label>Default Image X%</Label><Input type="number" {...form.register('defaultImageX')} /></div>
                     <div><Label>Default Image Y%</Label><Input type="number" {...form.register('defaultImageY')} /></div>
@@ -391,8 +479,8 @@ export default function AdminProductsPage() {
 
             <DialogFooter className="pt-4">
               <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
-              <Button type="submit" disabled={form.formState.isSubmitting} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (editingProduct ? 'Save Changes' : 'Add Product')}
+              <Button type="submit" disabled={form.formState.isSubmitting || Object.values(isUploading).some(s => s)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                {form.formState.isSubmitting || Object.values(isUploading).some(s => s) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (editingProduct ? 'Save Changes' : 'Add Product')}
               </Button>
             </DialogFooter>
           </form>
@@ -446,3 +534,6 @@ export default function AdminProductsPage() {
     </div>
   );
 }
+
+
+    
