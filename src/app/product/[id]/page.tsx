@@ -390,6 +390,7 @@ export default function ProductPage({ params: paramsPromise }: { params: Promise
                   className="object-contain p-2 sm:p-4 md:p-6 pointer-events-none select-none"
                   data-ai-hint={currentImage.altText || product.dataAiHint || 'product detail'}
                   priority
+                  sizes="(max-width: 768px) 100vw, 50vw"
                 />
               )}
               {isCustomizable(product) && product.allowImageUpload && customImageDataUri && (
@@ -411,6 +412,7 @@ export default function ProductPage({ params: paramsPromise }: { params: Promise
                     width={300}
                     height={300}
                     className="object-contain shadow-lg rounded border-2 border-primary bg-background/50 pointer-events-none select-none"
+                    sizes="(max-width: 768px) 80vw, 40vw"
                   />
                 </div>
               )}
@@ -450,6 +452,7 @@ export default function ProductPage({ params: paramsPromise }: { params: Promise
                       width={80}
                       height={80}
                       className="w-full h-full object-cover"
+                      sizes="80px"
                     />
                   </button>
                 ))}

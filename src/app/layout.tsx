@@ -1,12 +1,27 @@
 
 import type { Metadata } from 'next';
-import { GeistSans } from 'geist/font/sans';
-import { GeistMono } from 'geist/font/mono';
+import { Poppins, Noto_Sans_Devanagari } from 'next/font/google';
 import './globals.css';
 import AppProviders from '@/components/layout/AppProviders';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { cn } from '@/lib/utils';
 
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-poppins',
+});
+
+const notoSansDevanagari = Noto_Sans_Devanagari({
+  subsets: ['devanagari'],
+  weight: ['400', '500', '700'], // Adjust weights as needed
+  variable: '--font-noto-sans-devanagari',
+});
+
+// To ensure page titles are primarily managed by Next.js and not dynamically changed by client-side JavaScript (within your app's code),
+// rely on this 'metadata' object and the 'metadata' exports in individual page.tsx files.
+// Avoid directly setting `document.title` in component lifecycle methods or effects within your application components.
 export const metadata: Metadata = {
   title: {
     default: 'AtoZdpolify - Your Destination for Amazing Products',
@@ -21,8 +36,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
-      <body className="antialiased flex flex-col min-h-screen">
+    <html lang="en" className={cn(poppins.variable, notoSansDevanagari.variable)}>
+      <body className={cn(
+        'antialiased flex flex-col min-h-screen',
+        poppins.className // Apply Poppins as the default body font class
+      )}>
         <AppProviders>
           <Header />
           <main className="flex-grow">

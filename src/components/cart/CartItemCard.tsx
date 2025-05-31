@@ -43,6 +43,7 @@ export default function CartItemCard({ item }: CartItemCardProps) {
           fill
           className="rounded-md object-cover border border-muted bg-muted"
           data-ai-hint={item.dataAiHint || 'product thumbnail'}
+          sizes="(max-width: 640px) 80px, (max-width: 768px) 96px, 112px"
         />
         {item.customization?.customImageDataUri && (
            <Image
@@ -55,6 +56,7 @@ export default function CartItemCard({ item }: CartItemCardProps) {
               left: '50%', 
               top: '50%',
             }}
+            sizes="(max-width: 640px) 72px, (max-width: 768px) 88px, 100px" // Slightly smaller than parent
           />
         )}
          {item.customization?.text && (

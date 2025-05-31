@@ -42,6 +42,7 @@ export default function WishlistItemCard({ item }: WishlistItemCardProps) {
           height={120}
           className="rounded-md object-cover aspect-square border border-muted bg-muted"
           data-ai-hint={item.dataAiHint || 'product thumbnail'}
+          sizes="(max-width: 640px) 80px, (max-width: 768px) 96px, 112px"
         />
       </Link>
       <div className="flex-grow self-start sm:self-center w-full sm:w-auto">

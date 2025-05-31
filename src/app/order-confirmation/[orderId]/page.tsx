@@ -175,6 +175,7 @@ export default function OrderConfirmationPage() {
                       fill
                       className="rounded-lg object-cover border bg-muted shadow-sm" 
                       data-ai-hint="ordered product image"
+                      sizes="(max-width: 640px) 80px, 96px"
                     />
                     {item.customization?.customImageDataUri && (
                         <Image
@@ -187,6 +188,7 @@ export default function OrderConfirmationPage() {
                                 left: '50%',
                                 top: '50%',
                             }}
+                            sizes="(max-width: 640px) 72px, 88px"
                         />
                     )}
                     {item.customization?.text && (

@@ -118,6 +118,7 @@ export default function OrderCard({ order, existingReturnRequests }: OrderCardPr
                       height={80}
                       className="rounded-md object-cover h-20 w-20 border flex-shrink-0 bg-muted"
                       data-ai-hint="ordered product image"
+                      sizes="80px"
                     />
                     <div className="flex-grow min-w-0">
                       <p className="font-medium text-sm md:text-base leading-tight text-foreground">{item.name}</p>
