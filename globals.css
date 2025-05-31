@@ -1,0 +1,139 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  :root {
+    /* New background: #d0b19f (Dusty Rose / Light Beige-Pink) */
+    --background: 21 33% 72%; 
+    --foreground: 220 15% 20%; /* Darker, richer slate blue - should still contrast well */
+
+    /* Adjusting card and popover to be slightly off-white or a very light version of the new bg for distinct layers */
+    --card: 21 30% 96%; /* Very light, almost white, version of the background hue */
+    --card-foreground: 220 15% 20%; 
+
+    --popover: 21 30% 97%; 
+    --popover-foreground: 220 15% 20%;
+
+    --primary: 255 65% 58%; /* Engaging, modern Indigo/Purple */
+    --primary-foreground: 0 0% 100%; /* White */
+
+    /* Secondary and Muted colors might need adjustment to harmonize with the new warm background */
+    --secondary: 21 25% 88%; /* Lighter, slightly desaturated version of the background hue */
+    --secondary-foreground: 220 10% 35%; 
+
+    --muted: 21 20% 82%; /* Muted version of the background hue */
+    --muted-foreground: 220 10% 45%; 
+
+    --accent: 25 95% 58%; /* Vibrant, energetic Orange - should pop against the new bg */
+    --accent-foreground: 0 0% 10%; 
+    
+    --destructive: 0 75% 55%; 
+    --destructive-foreground: 0 0% 100%; 
+
+    /* Border and input might need slight adjustment to complement the new bg */
+    --border: 21 25% 80%; /* Slightly darker than muted for clear separation */
+    --input: 21 25% 80%; 
+    --ring: 255 60% 70%; 
+
+    --radius: 0.5rem; 
+
+    --chart-1: 255 65% 58%; 
+    --chart-2: 25 95% 65%;  
+    --chart-3: 180 50% 50%; 
+    --chart-4: 300 60% 65%; 
+    --chart-5: 50 80% 55%;  
+    
+    /* Admin Sidebar specific theme - assuming this can remain darker for contrast */
+    --sidebar-background: 220 15% 18%; 
+    --sidebar-foreground: 0 0% 98%; 
+    --sidebar-primary: 255 60% 65%; 
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 15% 28%; 
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 220 15% 25%;
+    --sidebar-ring: 255 60% 75%;
+  }
+
+  .dark {
+    /* Dark theme adjustments to complement the new warm light theme */
+    --background: 21 15% 12%; /* Dark, warm background */
+    --foreground: 21 20% 90%; /* Off-white with a hint of warmth */
+
+    --card: 21 15% 18%; 
+    --card-foreground: 21 20% 90%; 
+
+    --popover: 21 15% 15%; 
+    --popover-foreground: 21 20% 90%;
+
+    --primary: 255 60% 65%; 
+    --primary-foreground: 0 0% 100%; 
+
+    --secondary: 21 15% 25%; 
+    --secondary-foreground: 21 20% 80%; 
+
+    --muted: 21 15% 22%; 
+    --muted-foreground: 21 15% 60%; 
+
+    --accent: 25 90% 65%; 
+    --accent-foreground: 0 0% 10%; 
+
+    --destructive: 0 70% 60%; 
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 21 15% 30%; 
+    --input: 21 15% 30%;
+    --ring: 255 60% 75%; 
+    
+    --chart-1: 255 60% 70%;
+    --chart-2: 25 90% 70%;
+    --chart-3: 180 45% 55%;
+    --chart-4: 300 55% 70%;
+    --chart-5: 50 75% 60%;
+
+    /* Admin Sidebar dark theme specific theme */
+    --sidebar-background: 220 20% 96%; 
+    --sidebar-foreground: 220 15% 15%; 
+    --sidebar-primary: 255 65% 55%; 
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 20% 90%; 
+    --sidebar-accent-foreground: 220 15% 15%;
+    --sidebar-border: 220 15% 85%;
+    --sidebar-ring: 255 65% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    /* Subtle radial gradient using the new background color */
+    background-image: radial-gradient(circle at top center, hsl(var(--primary) / 0.03) 0%, hsl(var(--background)) 30%, hsl(var(--background)) 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  main {
+    flex-grow: 1;
+    @apply py-8 md:py-12; 
+  }
+  .container {
+    @apply w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+}
+
+@layer components {
+  .text-balance { 
+    text-wrap: balance;
+  }
+  .bg-premium-gradient {
+    @apply bg-gradient-to-br from-primary/10 via-transparent to-secondary/10;
+  }
+}
